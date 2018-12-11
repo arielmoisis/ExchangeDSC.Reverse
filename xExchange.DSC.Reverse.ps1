@@ -75,8 +75,89 @@ function Orchestrator {
     
     # Loop through all SQL Instances and extract their DSC information;
     foreach ($Server in $ExchangeServers) {        
-        Write-Host "$($env:computername) Scanning ActiveSync Virtual Direcotry Settings" -BackgroundColor DarkGreen -ForegroundColor White
+        Write-Host "$($env:computername) Scanning ActiveSync Virtual Directory Settings" -BackgroundColor DarkGreen -ForegroundColor White
         Read-ExchActiveSyncVirtualDirectory
+
+        Write-Host "$($env:computername) Scanning Exchange Malware Settings" -BackgroundColor DarkGreen -ForegroundColor White
+        Read-ExchAntiMalwareScanning
+        
+        Write-Host "$($env:computername) Scanning Autodiscover Virtual Directory Settings" -BackgroundColor DarkGreen -ForegroundColor White
+        Read-ExchAutodiscoverVirtualDirectory
+        
+        Write-Host "$($env:computername) Scanning Auto Mount Point Settings" -BackgroundColor DarkGreen -ForegroundColor White
+        Read-ExchAutoMountPoint
+        
+        Write-Host "$($env:computername) Scanning Client Access Server Settings" -BackgroundColor DarkGreen -ForegroundColor White
+        Read-ExchClientAccessServer
+        
+        Write-Host "$($env:computername) Scanning DAG Group Member Settings" -BackgroundColor DarkGreen -ForegroundColor White
+        Read-ExchDatabaseAvailabilityGroupMember
+        
+        Write-Host "$($env:computername) Scanning DAG Network Settings" -BackgroundColor DarkGreen -ForegroundColor White
+        Read-ExchDatabaseAvailabilityGroupNetwork
+        
+        Write-Host "$($env:computername) Scanning ECP Virtual Directory Settings" -BackgroundColor DarkGreen -ForegroundColor White
+        Read-ExchEcpVirtualDirectory
+        
+        Write-Host "$($env:computername) Scanning EventLog Settings" -BackgroundColor DarkGreen -ForegroundColor White
+        Read-ExchEventLogLevel
+        
+        Write-Host "$($env:computername) Scanning Exchange Certificate Settings" -BackgroundColor DarkGreen -ForegroundColor White
+        Read-ExchExchangeCertificate
+        
+        Write-Host "$($env:computername) Scanning Exchange Server Settings" -BackgroundColor DarkGreen -ForegroundColor White
+        Read-ExchExchangeServer
+        
+        Write-Host "$($env:computername) Scanning IMAP Settings" -BackgroundColor DarkGreen -ForegroundColor White
+        Read-ExchImapSettings
+        
+        Write-Host "$($env:computername) Scanning Server Database Settings" -BackgroundColor DarkGreen -ForegroundColor White
+        Read-ExchMailboxDatabase
+        
+        Write-Host "$($env:computername) Scanning Server Database Copy Settings" -BackgroundColor DarkGreen -ForegroundColor White
+        Read-ExchMailboxDatabaseCopy
+        
+        Write-Host "$($env:computername) Scanning Mailbox Server Settings" -BackgroundColor DarkGreen -ForegroundColor White
+        Read-ExchMailboxServer
+        
+        Write-Host "$($env:computername) Scanning Transport Service Settings" -BackgroundColor DarkGreen -ForegroundColor White
+        Read-ExchMailboxTransportService
+        
+        Write-Host "$($env:computername) Scanning Maintenace Mode Settings" -BackgroundColor DarkGreen -ForegroundColor White
+        Read-ExchMaintenanceMode
+        
+        Write-Host "$($env:computername) Scanning MAPI Virtual Directory Settings" -BackgroundColor DarkGreen -ForegroundColor White
+        Read-ExchMapiVirtualDirectory
+        
+        Write-Host "$($env:computername) Scanning OAB Virtual Directory Settings" -BackgroundColor DarkGreen -ForegroundColor White
+        Read-ExchOabVirtualDirectory
+        
+        Write-Host "$($env:computername) Scanning Outlook Anywhere Settings" -BackgroundColor DarkGreen -ForegroundColor White
+        Read-ExchOutlookAnywhere
+        
+        Write-Host "$($env:computername) Scanning OWAc Virtual Directory Settings" -BackgroundColor DarkGreen -ForegroundColor White
+        Read-ExchOwaVirtualDirectory
+        
+        Write-Host "$($env:computername) Scanning POP Settings" -BackgroundColor DarkGreen -ForegroundColor White
+        Read-ExchPopSettings
+        
+        Write-Host "$($env:computername) Scanning Powershell Virtual Directory Settings" -BackgroundColor DarkGreen -ForegroundColor White
+        Read-ExchPowershellVirtualDirectory
+        
+        Write-Host "$($env:computername) Scanning Receive Connector Settings" -BackgroundColor DarkGreen -ForegroundColor White
+        Read-ExchReceiveConnector
+        
+        Write-Host "$($env:computername) Scanning Transport Service Settings" -BackgroundColor DarkGreen -ForegroundColor White
+        Read-ExchTransportService
+        
+        Write-Host "$($env:computername) Scanning UM Call Router Settings" -BackgroundColor DarkGreen -ForegroundColor White
+        Read-ExchUMCallRouterSettings
+        
+        Write-Host "$($env:computername) Scanning UM Service Settings" -BackgroundColor DarkGreen -ForegroundColor White
+        Read-ExchUMService
+        
+        Write-Host "$($env:computername) Scanning EWS Virtual Directory Settings" -BackgroundColor DarkGreen -ForegroundColor White
+        Read-ExchWebServicesVirtualDirectory
     }
 
     Write-Host "$($env:computername) Configuring Local Configuration Manager (LCM)..." -BackgroundColor DarkGreen -ForegroundColor White
@@ -352,6 +433,198 @@ function Read-ExchMailboxTransportService {
     $Script:dscConfigContent += Get-DSCBlock -Params $results -ModulePath $module
     $Script:dscConfigContent += "        }`r`n"
 }
+function Read-ExchMaintenanceMode {
+    [cmdletbinding()]
+    param()  
+    $module = Resolve-Path ($Script:DSCPath + "\DSCResources\MSFT_xExchMaintenanceMode\MSFT_xExchMaintenanceMode.psm1")
+    Import-Module $module
+    $params = Get-DSCFakeParameters -ModulePath $module
+    # Setting Exchange Session Settings
+    $params.Credential = $Credential
+    $params.DomainController =  ([ADSI]”LDAP://RootDSE”).dnshostname
+    $results = Get-TargetResource @params
+    $Script:dscConfigContent += "        xExchMaintenanceMode " + [System.Guid]::NewGuid().toString() + "`r`n"
+    $Script:dscConfigContent += "        {`r`n"
+    $Script:dscConfigContent += Get-DSCBlock -Params $results -ModulePath $module
+    $Script:dscConfigContent += "        }`r`n"
+}
+function Read-ExchMapiVirtualDirectory {
+    [cmdletbinding()]
+    param()  
+    $module = Resolve-Path ($Script:DSCPath + "\DSCResources\MSFT_xExchMapiVirtualDirectory\MSFT_xExchMapiVirtualDirectory.psm1")
+    Import-Module $module
+    $params = Get-DSCFakeParameters -ModulePath $module
+    # Setting Exchange Session Settings
+    $params.Credential = $Credential
+    $params.Identity = "$env:COMPUTERNAME\mapi (Default Web Site)"
+    $params.DomainController =  ([ADSI]”LDAP://RootDSE”).dnshostname
+    $results = Get-TargetResource @params
+    $Script:dscConfigContent += "        xExchMapiVirtualDirectory " + [System.Guid]::NewGuid().toString() + "`r`n"
+    $Script:dscConfigContent += "        {`r`n"
+    $Script:dscConfigContent += Get-DSCBlock -Params $results -ModulePath $module
+    $Script:dscConfigContent += "        }`r`n"
+}
+function Read-ExchOabVirtualDirectory {
+    [cmdletbinding()]
+    param()  
+    $module = Resolve-Path ($Script:DSCPath + "\DSCResources\MSFT_xExchOabVirtualDirectory\MSFT_xExchOabVirtualDirectory.psm1")
+    Import-Module $module
+    $params = Get-DSCFakeParameters -ModulePath $module
+    # Setting Exchange Session Settings
+    $params.Credential = $Credential
+    $params.Identity = "$env:COMPUTERNAME\oab (Default Web Site)"
+    $params.DomainController =  ([ADSI]”LDAP://RootDSE”).dnshostname
+    $results = Get-TargetResource @params
+    $Script:dscConfigContent += "        xExchOabVirtualDirectory " + [System.Guid]::NewGuid().toString() + "`r`n"
+    $Script:dscConfigContent += "        {`r`n"
+    $Script:dscConfigContent += Get-DSCBlock -Params $results -ModulePath $module
+    $Script:dscConfigContent += "        }`r`n"
+}
+function Read-ExchOutlookAnywhere {
+    [cmdletbinding()]
+    param()  
+    $module = Resolve-Path ($Script:DSCPath + "\DSCResources\MSFT_xExchOutlookAnywhere\MSFT_xExchOutlookAnywhere.psm1")
+    Import-Module $module
+    $params = Get-DSCFakeParameters -ModulePath $module
+    # Setting Exchange Session Settings
+    $params.Credential = $Credential
+    $params.Identity = "$env:COMPUTERNAME\RPC (Default Web Site)"
+    $params.DomainController =  ([ADSI]”LDAP://RootDSE”).dnshostname
+    $results = Get-TargetResource @params
+    $Script:dscConfigContent += "        xExchOutlookAnywhere " + [System.Guid]::NewGuid().toString() + "`r`n"
+    $Script:dscConfigContent += "        {`r`n"
+    $Script:dscConfigContent += Get-DSCBlock -Params $results -ModulePath $module
+    $Script:dscConfigContent += "        }`r`n"
+}
+function Read-ExchOwaVirtualDirectory {
+    [cmdletbinding()]
+    param()  
+    $module = Resolve-Path ($Script:DSCPath + "\DSCResources\MSFT_xExchOwaVirtualDirectory\MSFT_xExchOwaVirtualDirectory.psm1")
+    Import-Module $module
+    $params = Get-DSCFakeParameters -ModulePath $module
+    # Setting Exchange Session Settings
+    $params.Credential = $Credential
+    $params.Identity = "$env:COMPUTERNAME\owa (Default Web Site)"
+    $params.DomainController =  ([ADSI]”LDAP://RootDSE”).dnshostname
+    $results = Get-TargetResource @params
+    $Script:dscConfigContent += "        xExchOwaVirtualDirectory " + [System.Guid]::NewGuid().toString() + "`r`n"
+    $Script:dscConfigContent += "        {`r`n"
+    $Script:dscConfigContent += Get-DSCBlock -Params $results -ModulePath $module
+    $Script:dscConfigContent += "        }`r`n"
+}
+function Read-ExchPopSettings {
+    [cmdletbinding()]
+    param()  
+    $module = Resolve-Path ($Script:DSCPath + "\DSCResources\MSFT_xExchPopSettings\MSFT_xExchPopSettings.psm1")
+    Import-Module $module
+    $params = Get-DSCFakeParameters -ModulePath $module
+    # Setting Exchange Session Settings
+    $params.Credential = $Credential
+    $params.Server = $env:COMPUTERNAME
+    $params.DomainController =  ([ADSI]”LDAP://RootDSE”).dnshostname
+    $results = Get-TargetResource @params
+    $Script:dscConfigContent += "        xExchPopSettings " + [System.Guid]::NewGuid().toString() + "`r`n"
+    $Script:dscConfigContent += "        {`r`n"
+    $Script:dscConfigContent += Get-DSCBlock -Params $results -ModulePath $module
+    $Script:dscConfigContent += "        }`r`n"
+}
+function Read-ExchPowershellVirtualDirectory {
+    [cmdletbinding()]
+    param()  
+    $module = Resolve-Path ($Script:DSCPath + "\DSCResources\MSFT_xExchPowershellVirtualDirectory\MSFT_xExchPowershellVirtualDirectory.psm1")
+    Import-Module $module
+    $params = Get-DSCFakeParameters -ModulePath $module
+    # Setting Exchange Session Settings
+    $params.Credential = $Credential
+    $params.Identity = "$env:COMPUTERNAME\powershell (Default Web Site)"
+    $params.DomainController =  ([ADSI]”LDAP://RootDSE”).dnshostname
+    $results = Get-TargetResource @params
+    $Script:dscConfigContent += "        xExchPowershellVirtualDirectory " + [System.Guid]::NewGuid().toString() + "`r`n"
+    $Script:dscConfigContent += "        {`r`n"
+    $Script:dscConfigContent += Get-DSCBlock -Params $results -ModulePath $module
+    $Script:dscConfigContent += "        }`r`n"
+}
+#Need to get all Connectors
+function Read-ExchReceiveConnector {
+    [cmdletbinding()]
+    param()  
+    $module = Resolve-Path ($Script:DSCPath + "\DSCResources\MSFT_xExchReceiveConnector\MSFT_xExchReceiveConnector.psm1")
+    Import-Module $module
+    $params = Get-DSCFakeParameters -ModulePath $module
+    # Setting Exchange Session Settings
+    $params.Credential = $Credential
+    $params.Identity = "$env:COMPUTERNAME\powershell (Default Web Site)"
+    $params.DomainController =  ([ADSI]”LDAP://RootDSE”).dnshostname
+    $results = Get-TargetResource @params
+    $Script:dscConfigContent += "        xExchReceiveConnector " + [System.Guid]::NewGuid().toString() + "`r`n"
+    $Script:dscConfigContent += "        {`r`n"
+    $Script:dscConfigContent += Get-DSCBlock -Params $results -ModulePath $module
+    $Script:dscConfigContent += "        }`r`n"
+}
+function Read-ExchTransportService {
+    [cmdletbinding()]
+    param()  
+    $module = Resolve-Path ($Script:DSCPath + "\DSCResources\MSFT_xExchTransportService\MSFT_xExchTransportService.psm1")
+    Import-Module $module
+    $params = Get-DSCFakeParameters -ModulePath $module
+    # Setting Exchange Session Settings
+    $params.Credential = $Credential
+    $params.Identity = $env:COMPUTERNAME
+    $params.DomainController =  ([ADSI]”LDAP://RootDSE”).dnshostname
+    $results = Get-TargetResource @params
+    $Script:dscConfigContent += "        xExchTransportService " + [System.Guid]::NewGuid().toString() + "`r`n"
+    $Script:dscConfigContent += "        {`r`n"
+    $Script:dscConfigContent += Get-DSCBlock -Params $results -ModulePath $module
+    $Script:dscConfigContent += "        }`r`n"
+}
+function Read-ExchUMCallRouterSettings {
+    [cmdletbinding()]
+    param()  
+    $module = Resolve-Path ($Script:DSCPath + "\DSCResources\MSFT_xExchUMCallRouterSettings\MSFT_xExchUMCallRouterSettings.psm1")
+    Import-Module $module
+    $params = Get-DSCFakeParameters -ModulePath $module
+    # Setting Exchange Session Settings
+    $params.Credential = $Credential
+    $params.Server = $env:COMPUTERNAME
+    $params.DomainController =  ([ADSI]”LDAP://RootDSE”).dnshostname
+    $results = Get-TargetResource @params
+    $Script:dscConfigContent += "        xExchUMCallRouterSettings " + [System.Guid]::NewGuid().toString() + "`r`n"
+    $Script:dscConfigContent += "        {`r`n"
+    $Script:dscConfigContent += Get-DSCBlock -Params $results -ModulePath $module
+    $Script:dscConfigContent += "        }`r`n"
+}
+function Read-ExchUMService {
+    [cmdletbinding()]
+    param()  
+    $module = Resolve-Path ($Script:DSCPath + "\DSCResources\MSFT_xExchUMService\MSFT_xExchUMService.psm1")
+    Import-Module $module
+    $params = Get-DSCFakeParameters -ModulePath $module
+    # Setting Exchange Session Settings
+    $params.Credential = $Credential
+    $params.Identity = $env:COMPUTERNAME
+    $params.DomainController =  ([ADSI]”LDAP://RootDSE”).dnshostname
+    $results = Get-TargetResource @params
+    $Script:dscConfigContent += "        xExchUMService " + [System.Guid]::NewGuid().toString() + "`r`n"
+    $Script:dscConfigContent += "        {`r`n"
+    $Script:dscConfigContent += Get-DSCBlock -Params $results -ModulePath $module
+    $Script:dscConfigContent += "        }`r`n"
+}
+function Read-ExchWebServicesVirtualDirectory {
+    [cmdletbinding()]
+    param()  
+    $module = Resolve-Path ($Script:DSCPath + "\DSCResources\MSFT_xExchWebServicesVirtualDirectory\MSFT_xExchWebServicesVirtualDirectory.psm1")
+    Import-Module $module
+    $params = Get-DSCFakeParameters -ModulePath $module
+    # Setting Exchange Session Settings
+    $params.Credential = $Credential
+    $params.Identity = "$env:COMPUTERNAME\ews (Default Web Site)"
+    $params.DomainController =  ([ADSI]”LDAP://RootDSE”).dnshostname
+    $results = Get-TargetResource @params
+    $Script:dscConfigContent += "        xExchWebServicesVirtualDirectory " + [System.Guid]::NewGuid().toString() + "`r`n"
+    $Script:dscConfigContent += "        {`r`n"
+    $Script:dscConfigContent += Get-DSCBlock -Params $results -ModulePath $module
+    $Script:dscConfigContent += "        }`r`n"
+}
 
 #endregion
 
@@ -420,5 +693,10 @@ function Get-ReverseDSC() {
     Start-Sleep 2
     Invoke-Item -Path $OutputDSCPath
 }
+#List Functions in script
+<#
+$Content = Get-Content test.ps1
+($Content |Select-String "function* Read") -replace "function (Read-\w+).*",'$1'
+#>
 
 Get-ReverseDSC
