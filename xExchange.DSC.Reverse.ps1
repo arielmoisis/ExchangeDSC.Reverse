@@ -1,8 +1,8 @@
 <#PSScriptInfo
 
-.VERSION 1.1.0.0
+.VERSION 0.1.0.0
 
-.GUID c5d39ceb-c4b0-4a22-b98f-22be7688802a
+.GUID ba0cb519-1bb2-4327-ad8f-92b0a0ca5815
 
 .AUTHOR Microsoft Corporation
 
@@ -230,6 +230,7 @@ function Read-ExchAutodiscoverVirtualDirectory {
     # Setting Exchange Session Settings
     $params.Credential = $Credential
     $params.DomainController =  ([ADSI]”LDAP://RootDSE”).dnshostname
+    $params.Identity = "$env:COMPUTERNAME\autodiscover (Default Web Site)"
     $results = Get-TargetResource @params
     $Script:dscConfigContent += "        xExchAutodiscoverVirtualDirectory " + [System.Guid]::NewGuid().toString() + "`r`n"
     $Script:dscConfigContent += "        {`r`n"
