@@ -48,6 +48,8 @@ catch {
 }
 $Script:DSCPath = $DSCSource + $DSCVersion
 
+$ExchangeServers = $env:COMPUTERNAME
+
 <## This is the main function for this script. It acts as a call dispatcher, calling the various functions required in the proper order to get 
 the full environment's picture. #>
 function Orchestrator {        
@@ -66,6 +68,15 @@ function Orchestrator {
     $Script:dscConfigContent += "<# Generated with xExchangeServer.Reverse " + $script:version + " #>`r`n"   
     $Script:dscConfigContent += "Configuration $configName`r`n"
     $Script:dscConfigContent += "{`r`n"
+    $Script:dscConfigContent += "    param`r`n"
+    $Script:dscConfigContent += "    (`r`n"
+    $Script:dscConfigContent += "        [Parameter(Mandatory = $true)]`r`n"
+    $Script:dscConfigContent += "        [ValidateNotNullorEmpty()]`r`n"
+    $Script:dscConfigContent += "        [System.Management.Automation.PSCredential]`r`n"
+    $Script:dscConfigContent += '        $ExchangeAdminCredential'
+    $Script:dscConfigContent += "`r`n"
+
+    $Script:dscConfigContent += "    )`r`n"
 
     Write-Host "Configuring Dependencies..." -BackgroundColor DarkGreen -ForegroundColor White
     Set-Imports
@@ -90,21 +101,30 @@ function Orchestrator {
         Write-Host "$($env:computername) Scanning Client Access Server Settings" -BackgroundColor DarkGreen -ForegroundColor White
         Read-ExchClientAccessServer
         
-        Write-Host "$($env:computername) Scanning DAG Group Member Settings" -BackgroundColor DarkGreen -ForegroundColor White
-        Read-ExchDatabaseAvailabilityGroupMember
+        if ($DAG) {
+            Write-Host "$($env:computername) Scanning Server Database Copy Settings" -BackgroundColor DarkGreen -ForegroundColor White
+            Read-ExchMailboxDatabaseCopy
         
-        Write-Host "$($env:computername) Scanning DAG Network Settings" -BackgroundColor DarkGreen -ForegroundColor White
-        Read-ExchDatabaseAvailabilityGroupNetwork
+            Write-Host "$($env:computername) Scanning Maintenace Mode Settings" -BackgroundColor DarkGreen -ForegroundColor White
+            Read-ExchMaintenanceMode
+
+            Write-Host "$($env:computername) Scanning DAG Group Member Settings" -BackgroundColor DarkGreen -ForegroundColor White
+            Read-ExchDatabaseAvailabilityGroupMember
         
+            Write-Host "$($env:computername) Scanning DAG Network Settings" -BackgroundColor DarkGreen -ForegroundColor White
+            Read-ExchDatabaseAvailabilityGroupNetwork
+        }
+
         Write-Host "$($env:computername) Scanning ECP Virtual Directory Settings" -BackgroundColor DarkGreen -ForegroundColor White
         Read-ExchEcpVirtualDirectory
         
         Write-Host "$($env:computername) Scanning EventLog Settings" -BackgroundColor DarkGreen -ForegroundColor White
         Read-ExchEventLogLevel
         
-        Write-Host "$($env:computername) Scanning Exchange Certificate Settings" -BackgroundColor DarkGreen -ForegroundColor White
-        Read-ExchExchangeCertificate
-        
+        if ($Certificate) {
+            Write-Host "$($env:computername) Scanning Exchange Certificate Settings" -BackgroundColor DarkGreen -ForegroundColor White
+            Read-ExchExchangeCertificate -Thumbprint $Certificate
+        }
         Write-Host "$($env:computername) Scanning Exchange Server Settings" -BackgroundColor DarkGreen -ForegroundColor White
         Read-ExchExchangeServer
         
@@ -114,17 +134,11 @@ function Orchestrator {
         Write-Host "$($env:computername) Scanning Server Database Settings" -BackgroundColor DarkGreen -ForegroundColor White
         Read-ExchMailboxDatabase
         
-        Write-Host "$($env:computername) Scanning Server Database Copy Settings" -BackgroundColor DarkGreen -ForegroundColor White
-        Read-ExchMailboxDatabaseCopy
-        
         Write-Host "$($env:computername) Scanning Mailbox Server Settings" -BackgroundColor DarkGreen -ForegroundColor White
         Read-ExchMailboxServer
         
         Write-Host "$($env:computername) Scanning Transport Service Settings" -BackgroundColor DarkGreen -ForegroundColor White
         Read-ExchMailboxTransportService
-        
-        Write-Host "$($env:computername) Scanning Maintenace Mode Settings" -BackgroundColor DarkGreen -ForegroundColor White
-        Read-ExchMaintenanceMode
         
         Write-Host "$($env:computername) Scanning MAPI Virtual Directory Settings" -BackgroundColor DarkGreen -ForegroundColor White
         Read-ExchMapiVirtualDirectory
@@ -135,7 +149,7 @@ function Orchestrator {
         Write-Host "$($env:computername) Scanning Outlook Anywhere Settings" -BackgroundColor DarkGreen -ForegroundColor White
         Read-ExchOutlookAnywhere
         
-        Write-Host "$($env:computername) Scanning OWAc Virtual Directory Settings" -BackgroundColor DarkGreen -ForegroundColor White
+        Write-Host "$($env:computername) Scanning OWA Virtual Directory Settings" -BackgroundColor DarkGreen -ForegroundColor White
         Read-ExchOwaVirtualDirectory
         
         Write-Host "$($env:computername) Scanning POP Settings" -BackgroundColor DarkGreen -ForegroundColor White
@@ -187,6 +201,8 @@ function Read-ExchActiveSyncVirtualDirectory {
     $Script:dscConfigContent += "        xExchActiveSyncVirtualDirectory " + [System.Guid]::NewGuid().toString() + "`r`n"
     $Script:dscConfigContent += "        {`r`n"
     $Script:dscConfigContent += Get-DSCBlock -Params $results -ModulePath $module
+    $Script:dscConfigContent += '            Credential = $ExchangeCredentials';
+    $Script:dscConfigContent += "`r`n"
     $Script:dscConfigContent += "        }`r`n"
 }
 function Read-ExchAntiMalwareScanning {
@@ -201,6 +217,8 @@ function Read-ExchAntiMalwareScanning {
     $Script:dscConfigContent += "        xExchAntiMalwareScanning " + [System.Guid]::NewGuid().toString() + "`r`n"
     $Script:dscConfigContent += "        {`r`n"
     $Script:dscConfigContent += Get-DSCBlock -Params $results -ModulePath $module
+    $Script:dscConfigContent += '            Credential = $ExchangeCredentials';
+    $Script:dscConfigContent += "`r`n"
     $Script:dscConfigContent += "        }`r`n"
 }
 function Read-ExchAutodiscoverVirtualDirectory {
@@ -216,6 +234,8 @@ function Read-ExchAutodiscoverVirtualDirectory {
     $Script:dscConfigContent += "        xExchAutodiscoverVirtualDirectory " + [System.Guid]::NewGuid().toString() + "`r`n"
     $Script:dscConfigContent += "        {`r`n"
     $Script:dscConfigContent += Get-DSCBlock -Params $results -ModulePath $module
+    $Script:dscConfigContent += '            Credential = $ExchangeCredentials';
+    $Script:dscConfigContent += "`r`n"
     $Script:dscConfigContent += "        }`r`n"
 }
 function Read-ExchAutoMountPoint {
@@ -240,10 +260,13 @@ function Read-ExchClientAccessServer {
     # Setting Exchange Session Settings
     $params.Credential = $Credential
     $params.DomainController =  ([ADSI]”LDAP://RootDSE”).dnshostname
+    $params.Identity = $env:COMPUTERNAME
     $results = Get-TargetResource @params
     $Script:dscConfigContent += "        xExchClientAccessServer " + [System.Guid]::NewGuid().toString() + "`r`n"
     $Script:dscConfigContent += "        {`r`n"
     $Script:dscConfigContent += Get-DSCBlock -Params $results -ModulePath $module
+    $Script:dscConfigContent += '            Credential = $ExchangeCredentials';
+    $Script:dscConfigContent += "`r`n"
     $Script:dscConfigContent += "        }`r`n"
 }
 function Read-ExchDatabaseAvailabilityGroupMember {
@@ -259,6 +282,8 @@ function Read-ExchDatabaseAvailabilityGroupMember {
     $Script:dscConfigContent += "        xExchDatabaseAvailabilityGroupMember " + [System.Guid]::NewGuid().toString() + "`r`n"
     $Script:dscConfigContent += "        {`r`n"
     $Script:dscConfigContent += Get-DSCBlock -Params $results -ModulePath $module
+    $Script:dscConfigContent += '            Credential = $ExchangeCredentials';
+    $Script:dscConfigContent += "`r`n"
     $Script:dscConfigContent += "        }`r`n"
 }
 function Read-ExchDatabaseAvailabilityGroupNetwork {
@@ -274,6 +299,8 @@ function Read-ExchDatabaseAvailabilityGroupNetwork {
     $Script:dscConfigContent += "        xExchDatabaseAvailabilityGroupNetwork " + [System.Guid]::NewGuid().toString() + "`r`n"
     $Script:dscConfigContent += "        {`r`n"
     $Script:dscConfigContent += Get-DSCBlock -Params $results -ModulePath $module
+    $Script:dscConfigContent += '            Credential = $ExchangeCredentials';
+    $Script:dscConfigContent += "`r`n"
     $Script:dscConfigContent += "        }`r`n"
 }
 function Read-ExchEcpVirtualDirectory {
@@ -285,10 +312,13 @@ function Read-ExchEcpVirtualDirectory {
     # Setting Exchange Session Settings
     $params.Credential = $Credential
     $params.DomainController =  ([ADSI]”LDAP://RootDSE”).dnshostname
+    $params.Identity = "$env:COMPUTERNAME\ecp (Default Web Site)"
     $results = Get-TargetResource @params
     $Script:dscConfigContent += "        xExchEcpVirtualDirectory " + [System.Guid]::NewGuid().toString() + "`r`n"
     $Script:dscConfigContent += "        {`r`n"
     $Script:dscConfigContent += Get-DSCBlock -Params $results -ModulePath $module
+    $Script:dscConfigContent += '            Credential = $ExchangeCredentials';
+    $Script:dscConfigContent += "`r`n"
     $Script:dscConfigContent += "        }`r`n"
 }
 function Read-ExchEventLogLevel {
@@ -303,6 +333,8 @@ function Read-ExchEventLogLevel {
     $Script:dscConfigContent += "        xExchEventLogLevel " + [System.Guid]::NewGuid().toString() + "`r`n"
     $Script:dscConfigContent += "        {`r`n"
     $Script:dscConfigContent += Get-DSCBlock -Params $results -ModulePath $module
+    $Script:dscConfigContent += '            Credential = $ExchangeCredentials';
+    $Script:dscConfigContent += "`r`n"
     $Script:dscConfigContent += "        }`r`n"
 }
 
@@ -324,6 +356,8 @@ function Read-ExchExchangeCertificate {
     $Script:dscConfigContent += "        xExchExchangeCertificate " + [System.Guid]::NewGuid().toString() + "`r`n"
     $Script:dscConfigContent += "        {`r`n"
     $Script:dscConfigContent += Get-DSCBlock -Params $results -ModulePath $module
+    $Script:dscConfigContent += '            Credential = $ExchangeCredentials';
+    $Script:dscConfigContent += "`r`n"
     $Script:dscConfigContent += "        }`r`n"
 }
 #Correct DSC Module for 2016<
@@ -345,6 +379,8 @@ function Read-ExchExchangeServer {
     $Script:dscConfigContent += "        xExchExchangeServer " + [System.Guid]::NewGuid().toString() + "`r`n"
     $Script:dscConfigContent += "        {`r`n"
     $Script:dscConfigContent += Get-DSCBlock -Params $results -ModulePath $module
+    $Script:dscConfigContent += '            Credential = $ExchangeCredentials';
+    $Script:dscConfigContent += "`r`n"
     $Script:dscConfigContent += "        }`r`n"
 }
 function Read-ExchImapSettings {
@@ -364,6 +400,8 @@ function Read-ExchImapSettings {
     $Script:dscConfigContent += "        xExchImapSettings " + [System.Guid]::NewGuid().toString() + "`r`n"
     $Script:dscConfigContent += "        {`r`n"
     $Script:dscConfigContent += Get-DSCBlock -Params $results -ModulePath $module
+    $Script:dscConfigContent += '            Credential = $ExchangeCredentials';
+    $Script:dscConfigContent += "`r`n"
     $Script:dscConfigContent += "        }`r`n"
 }
 #How to read all databases needs to be worked out
@@ -382,6 +420,8 @@ function Read-ExchMailboxDatabase {
     $Script:dscConfigContent += "        xExchMailboxDatabase " + [System.Guid]::NewGuid().toString() + "`r`n"
     $Script:dscConfigContent += "        {`r`n"
     $Script:dscConfigContent += Get-DSCBlock -Params $results -ModulePath $module
+    $Script:dscConfigContent += '            Credential = $ExchangeCredentials';
+    $Script:dscConfigContent += "`r`n"
     $Script:dscConfigContent += "        }`r`n"
 }
 #Needs work to find all database copies
@@ -393,13 +433,14 @@ function Read-ExchMailboxDatabaseCopy {
     $params = Get-DSCFakeParameters -ModulePath $module
     # Setting Exchange Session Settings
     $params.Credential = $Credential
-    $params.Server = $env:COMPUTERNAME
     $params.Remove('AdServerSettingsPreferredServer')
     $params.DomainController =  ([ADSI]”LDAP://RootDSE”).dnshostname
     $results = Get-TargetResource @params
     $Script:dscConfigContent += "        xExchMailboxDatabaseCopy " + [System.Guid]::NewGuid().toString() + "`r`n"
     $Script:dscConfigContent += "        {`r`n"
     $Script:dscConfigContent += Get-DSCBlock -Params $results -ModulePath $module
+    $Script:dscConfigContent += '            Credential = $ExchangeCredentials';
+    $Script:dscConfigContent += "`r`n"
     $Script:dscConfigContent += "        }`r`n"
 }
 function Read-ExchMailboxServer {
@@ -416,6 +457,8 @@ function Read-ExchMailboxServer {
     $Script:dscConfigContent += "        xExchMailboxServer " + [System.Guid]::NewGuid().toString() + "`r`n"
     $Script:dscConfigContent += "        {`r`n"
     $Script:dscConfigContent += Get-DSCBlock -Params $results -ModulePath $module
+    $Script:dscConfigContent += '            Credential = $ExchangeCredentials';
+    $Script:dscConfigContent += "`r`n"
     $Script:dscConfigContent += "        }`r`n"
 }
 function Read-ExchMailboxTransportService {
@@ -431,6 +474,8 @@ function Read-ExchMailboxTransportService {
     $Script:dscConfigContent += "        xExchMailboxTransportService " + [System.Guid]::NewGuid().toString() + "`r`n"
     $Script:dscConfigContent += "        {`r`n"
     $Script:dscConfigContent += Get-DSCBlock -Params $results -ModulePath $module
+    $Script:dscConfigContent += '            Credential = $ExchangeCredentials';
+    $Script:dscConfigContent += "`r`n"
     $Script:dscConfigContent += "        }`r`n"
 }
 function Read-ExchMaintenanceMode {
@@ -446,6 +491,8 @@ function Read-ExchMaintenanceMode {
     $Script:dscConfigContent += "        xExchMaintenanceMode " + [System.Guid]::NewGuid().toString() + "`r`n"
     $Script:dscConfigContent += "        {`r`n"
     $Script:dscConfigContent += Get-DSCBlock -Params $results -ModulePath $module
+    $Script:dscConfigContent += '            Credential = $ExchangeCredentials';
+    $Script:dscConfigContent += "`r`n"
     $Script:dscConfigContent += "        }`r`n"
 }
 function Read-ExchMapiVirtualDirectory {
@@ -462,6 +509,8 @@ function Read-ExchMapiVirtualDirectory {
     $Script:dscConfigContent += "        xExchMapiVirtualDirectory " + [System.Guid]::NewGuid().toString() + "`r`n"
     $Script:dscConfigContent += "        {`r`n"
     $Script:dscConfigContent += Get-DSCBlock -Params $results -ModulePath $module
+    $Script:dscConfigContent += '            Credential = $ExchangeCredentials';
+    $Script:dscConfigContent += "`r`n"
     $Script:dscConfigContent += "        }`r`n"
 }
 function Read-ExchOabVirtualDirectory {
@@ -478,6 +527,8 @@ function Read-ExchOabVirtualDirectory {
     $Script:dscConfigContent += "        xExchOabVirtualDirectory " + [System.Guid]::NewGuid().toString() + "`r`n"
     $Script:dscConfigContent += "        {`r`n"
     $Script:dscConfigContent += Get-DSCBlock -Params $results -ModulePath $module
+    $Script:dscConfigContent += '            Credential = $ExchangeCredentials';
+    $Script:dscConfigContent += "`r`n"
     $Script:dscConfigContent += "        }`r`n"
 }
 function Read-ExchOutlookAnywhere {
@@ -494,6 +545,8 @@ function Read-ExchOutlookAnywhere {
     $Script:dscConfigContent += "        xExchOutlookAnywhere " + [System.Guid]::NewGuid().toString() + "`r`n"
     $Script:dscConfigContent += "        {`r`n"
     $Script:dscConfigContent += Get-DSCBlock -Params $results -ModulePath $module
+    $Script:dscConfigContent += '            Credential = $ExchangeCredentials';
+    $Script:dscConfigContent += "`r`n"
     $Script:dscConfigContent += "        }`r`n"
 }
 function Read-ExchOwaVirtualDirectory {
@@ -510,6 +563,8 @@ function Read-ExchOwaVirtualDirectory {
     $Script:dscConfigContent += "        xExchOwaVirtualDirectory " + [System.Guid]::NewGuid().toString() + "`r`n"
     $Script:dscConfigContent += "        {`r`n"
     $Script:dscConfigContent += Get-DSCBlock -Params $results -ModulePath $module
+    $Script:dscConfigContent += '            Credential = $ExchangeCredentials';
+    $Script:dscConfigContent += "`r`n"
     $Script:dscConfigContent += "        }`r`n"
 }
 function Read-ExchPopSettings {
@@ -526,6 +581,8 @@ function Read-ExchPopSettings {
     $Script:dscConfigContent += "        xExchPopSettings " + [System.Guid]::NewGuid().toString() + "`r`n"
     $Script:dscConfigContent += "        {`r`n"
     $Script:dscConfigContent += Get-DSCBlock -Params $results -ModulePath $module
+    $Script:dscConfigContent += '            Credential = $ExchangeCredentials';
+    $Script:dscConfigContent += "`r`n"
     $Script:dscConfigContent += "        }`r`n"
 }
 function Read-ExchPowershellVirtualDirectory {
@@ -542,6 +599,8 @@ function Read-ExchPowershellVirtualDirectory {
     $Script:dscConfigContent += "        xExchPowershellVirtualDirectory " + [System.Guid]::NewGuid().toString() + "`r`n"
     $Script:dscConfigContent += "        {`r`n"
     $Script:dscConfigContent += Get-DSCBlock -Params $results -ModulePath $module
+    $Script:dscConfigContent += '            Credential = $ExchangeCredentials';
+    $Script:dscConfigContent += "`r`n"
     $Script:dscConfigContent += "        }`r`n"
 }
 #Need to get all Connectors
@@ -559,6 +618,8 @@ function Read-ExchReceiveConnector {
     $Script:dscConfigContent += "        xExchReceiveConnector " + [System.Guid]::NewGuid().toString() + "`r`n"
     $Script:dscConfigContent += "        {`r`n"
     $Script:dscConfigContent += Get-DSCBlock -Params $results -ModulePath $module
+    $Script:dscConfigContent += '            Credential = $ExchangeCredentials';
+    $Script:dscConfigContent += "`r`n"
     $Script:dscConfigContent += "        }`r`n"
 }
 function Read-ExchTransportService {
@@ -570,11 +631,12 @@ function Read-ExchTransportService {
     # Setting Exchange Session Settings
     $params.Credential = $Credential
     $params.Identity = $env:COMPUTERNAME
-    $params.DomainController =  ([ADSI]”LDAP://RootDSE”).dnshostname
     $results = Get-TargetResource @params
     $Script:dscConfigContent += "        xExchTransportService " + [System.Guid]::NewGuid().toString() + "`r`n"
     $Script:dscConfigContent += "        {`r`n"
     $Script:dscConfigContent += Get-DSCBlock -Params $results -ModulePath $module
+    $Script:dscConfigContent += '            Credential = $ExchangeCredentials';
+    $Script:dscConfigContent += "`r`n"
     $Script:dscConfigContent += "        }`r`n"
 }
 function Read-ExchUMCallRouterSettings {
@@ -591,6 +653,8 @@ function Read-ExchUMCallRouterSettings {
     $Script:dscConfigContent += "        xExchUMCallRouterSettings " + [System.Guid]::NewGuid().toString() + "`r`n"
     $Script:dscConfigContent += "        {`r`n"
     $Script:dscConfigContent += Get-DSCBlock -Params $results -ModulePath $module
+    $Script:dscConfigContent += '            Credential = $ExchangeCredentials';
+    $Script:dscConfigContent += "`r`n"
     $Script:dscConfigContent += "        }`r`n"
 }
 function Read-ExchUMService {
@@ -607,6 +671,8 @@ function Read-ExchUMService {
     $Script:dscConfigContent += "        xExchUMService " + [System.Guid]::NewGuid().toString() + "`r`n"
     $Script:dscConfigContent += "        {`r`n"
     $Script:dscConfigContent += Get-DSCBlock -Params $results -ModulePath $module
+    $Script:dscConfigContent += '            Credential = $ExchangeCredentials';
+    $Script:dscConfigContent += "`r`n"
     $Script:dscConfigContent += "        }`r`n"
 }
 function Read-ExchWebServicesVirtualDirectory {
@@ -623,6 +689,8 @@ function Read-ExchWebServicesVirtualDirectory {
     $Script:dscConfigContent += "        xExchWebServicesVirtualDirectory " + [System.Guid]::NewGuid().toString() + "`r`n"
     $Script:dscConfigContent += "        {`r`n"
     $Script:dscConfigContent += Get-DSCBlock -Params $results -ModulePath $module
+    $Script:dscConfigContent += '            Credential = $ExchangeCredentials';
+    $Script:dscConfigContent += "`r`n"
     $Script:dscConfigContent += "        }`r`n"
 }
 
